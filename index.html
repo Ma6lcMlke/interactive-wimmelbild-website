@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Elektrische Community – Interaktive Karte</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111;
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      min-height: 100vh;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: clamp(1.6rem, 2.3vw, 2.3rem);
+      margin-bottom: 0.25rem;
+    }
+
+    .intro {
+      max-width: 900px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+
+    /* Bild + Hotspots */
+
+    .scene-wrapper {
+      position: relative;
+      max-width: 900px;
+      width: 100%;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+      background: #000;
+    }
+
+    .scene-wrapper img {
+      width: 100%;
+      display: block;
+      height: auto;
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: rgba(255, 0, 90, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .hotspot:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 0 12px rgba(255, 0, 120, 0.8);
+      background: rgba(255, 0, 120, 1);
+    }
+
+    .hotspot-label {
+      position: absolute;
+      transform: translate(-50%, calc(-50% - 22px));
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 3px 7px;
+      border-radius: 999px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* Modal */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 50;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #1c1c1f;
+      border-radius: 1rem;
+      max-width: 520px;
+      width: 100%;
+      padding: 1.25rem 1.4rem 1.4rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: #aaa;
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .modal-body {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #ddd;
+    }
+
+    .modal-body img,
+    .modal-body iframe {
+      max-width: 100%;
+      border-radius: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .modal-body a {
+      color: #ff4e9c;
+    }
+
+    .modal-body a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .hotspot {
+        width: 24px;
+        height: 24px;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Elektrische Community – Interaktive Messekarte</h1>
+    <p class="intro">
+      Klicke auf die <strong>leuchtenden Punkte</strong> im Wimmelbild, um mehr über Stände, Aktionen und besondere Bereiche der Veranstaltung zu erfahren.
+    </p>
+  </header>
+  <div class="scene-wrapper">
+    <!-- Wimmelbild; ersetze den Pfad durch dein Bildnamen -->
+    <img src="wimmelbild.png" alt="Elektrische Community Messe 2026">
+    <!-- Hotspots -->
+    <button class="hotspot" style="top: 36%; left: 64%;" data-spot="halle">
+      +<span class="hotspot-label">Messehalle</span>
+    </button>
+    <button class="hotspot" style="top: 32%; left: 60%;" data-spot="magazin">
+      +<span class="hotspot-label">Magazin-Stand</span>
+    </button>
+    <button class="hotspot" style="top: 14%; left: 30%;" data-spot="teslaZelt">
+      +<span class="hotspot-label">Tesla Area</span>
+    </button>
+    <button class="hotspot" style="top: 48%; left: 50%;" data-spot="foodtruck">
+      +<span class="hotspot-label">Foodtruck</span>
+    </button>
+    <button class="hotspot" style="top: 49%; left: 69%;" data-spot="kids">
+      +<span class="hotspot-label">Kids & Familie</span>
+    </button>
+    <button class="hotspot" style="top: 63%; left: 37%;" data-spot="showcars">
+      +<span class="hotspot-label">Showcars</span>
+    </button>
+    <button class="hotspot" style="top: 26%; left: 9%;" data-spot="offroad">
+      +<span class="hotspot-label">Offroad-Test</span>
+    </button>
+    <button class="hotspot" style="top: 18%; left: 70%;" data-spot="lightshow">
+      +<span class="hotspot-label">Lightshow Parkplatz</span>
+    </button>
+  </div>
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Titel</div>
+        <button class="modal-close" id="modalClose" aria-label="Schließen">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+      </div>
+    </div>
+  </div>
+  <script>
+    const hotspotContent = {
+      halle: {
+        title: "Messehalle – Vorträge & Aussteller",
+        html: `
+          <p>
+            In der großen Messehalle findest du unsere Hauptbühne mit Vorträgen,
+            Panels und Live-Talks rund um <strong>Elektromobilität, KI & Zukunft der Arbeit</strong>.
+          </p>
+          <ul>
+            <li>Stündliche Talks mit Expert:innen</li>
+            <li>Meet & Greet mit Content-Creator:innen</li>
+            <li>Infostände von Partnern und Sponsoren</li>
+          </ul>
+          <p>
+            Du kannst hier später z.&nbsp;B. einen <strong>Programmplan als PDF</strong> verlinken oder
+            ein <strong>eingebettetes YouTube-Video</strong> einfügen.
+          </p>
+        `
+      },
+      magazin: {
+        title: "Magazin-Stand – „Elektrische Community“",
+        html: `
+          <p>
+            Am Magazin-Stand erhältst du die aktuelle Ausgabe der <strong>Elektrischen Community</strong>
+            sowie Backissues und Infos zum Abo.
+          </p>
+          <p>
+            Hier könntest du später z.&nbsp;B.:
+          </p>
+          <ul>
+            <li>einen <a href="#">PDF-Download</a> des Magazins einbinden,</li>
+            <li>ein Formular für Newsletter-Anmeldung integrieren,</li>
+            <li>oder direkt zum <strong>Online-Shop</strong> verlinken.</li>
+          </ul>
+        `
+      },
+      teslaZelt: {
+        title: "Tesla Area",
+        html: `
+          <p>
+            Im Tesla-Zelt kannst du verschiedene Modelle entdecken, Fragen stellen
+            und dich über Ladeinfrastruktur, THG-Quote und Software informieren.
+          </p>
+          <p>
+            Du kannst hier ein eingebettetes <strong>Kontaktformular</strong>, einen
+            <strong>Terminbuchungs-Link</strong> oder ein <strong>Video-Review</strong> einfügen.
+          </p>
+        `
+      },
+      foodtruck: {
+        title: "Foodtruck & Getränke",
+        html: `
+          <p>
+            Hier gibt es Kaffee, Street-Food und Snacks für zwischendurch.
+          </p>
+          <p>
+            Optionale Inhalte:
+          </p>
+          <ul>
+            <li>Speisekarte als Bild oder PDF</li>
+            <li>Hinweis auf <strong>vegane / vegetarische Optionen</strong></li>
+            <li>Öffnungszeiten & Specials</li>
+          </ul>
+        `
+      },
+      kids: {
+        title: "Kids & Family Area",
+        html: `
+          <p>
+            In diesem Bereich finden Kinderprogramm, Spiele und kleine Workshops statt,
+            damit die ganze Familie Spaß hat.
+          </p>
+          <p>
+            Füge hier z.&nbsp;B. einen Plan mit Uhrzeiten, Altersangaben
+            oder einen Hinweis auf benötigte Anmeldung ein.
+          </p>
+        `
+      },
+      showcars: {
+        title: "Showcars & Tuning",
+        html: `
+          <p>
+            Die bunt markierten Fahrzeuge sind besondere <strong>Showcars</strong>,
+            Umbauten oder Prototypen.
+          </p>
+          <p>
+            Denkbar wären hier:
+          </p>
+          <ul>
+            <li>Einzelportraits der Fahrzeuge mit Bildern</li>
+            <li>Links zu Social-Media-Profilen der Besitzer:innen</li>
+            <li>Technische Datenblätter als Download</li>
+          </ul>
+        `
+      },
+      offroad: {
+        title: "Offroad-Teststrecke",
+        html: `
+          <p>
+            An der Offroad-Sektion kannst du erleben, wie sich Fahrzeuge
+            auf anspruchsvollerem Terrain verhalten.
+          </p>
+          <p>
+            Hier könntest du einen <strong>Haftungsausschluss</strong>,
+            Sicherheitsinfos oder ein <strong>Buchungstool für Testfahrten</strong> einbetten.
+          </p>
+        `
+      },
+      lightshow: {
+        title: "Lightshow Parkplatz",
+        html: `
+          <p>
+            Auf diesem Parkplatz findet nachts die große
+            <strong>Electric Lightshow</strong> statt – synchronisierte Lichter,
+            Musikanimationen und Showcars mit individuellen Beleuchtungseffekten.
+          </p>
+          <p>
+            Mögliche Inhalte, die du später einbetten könntest:
+          </p>
+          <ul>
+            <li>Show-Zeitplan (z. B. 21:00 / 22:30 / 00:00 Uhr)</li>
+            <li>Video-Highlight der letzten Lightshow</li>
+            <li>Liste der teilnehmenden Fahrzeuge</li>
+            <li>Sicherheits- & Abstandsregeln</li>
+          </ul>
+        `
+      }
+    };
+    const backdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    const modalClose = document.getElementById('modalClose');
+    document.querySelectorAll('.hotspot').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-spot');
+        const content = hotspotContent[key];
+        if (!content) return;
+        modalTitle.innerHTML = content.title;
+        modalBody.innerHTML = content.html;
+        backdrop.classList.add('active');
+      });
+    });
+    function closeModal() {
+      backdrop.classList.remove('active');
+    }
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        closeModal();
+      }
+    });
+    modalClose.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
